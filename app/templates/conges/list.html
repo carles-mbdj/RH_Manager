@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Liste des congés</h2>
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCongeModal">
+    Ajouter un congé
+</button>
+
+<a href="{{ url_for('rh.export_conges_excel') }}" class="btn btn-outline-primary me-1">
+  <i class="bi bi-file-earmark-excel"></i> Export Excel
+</a>
+
+<a href="{{ url_for('rh.export_conges_pdf') }}" target="_blank" class="btn btn-outline-danger">
+  <i class="bi bi-file-earmark-pdf"></i> Export PDF
+</a>
+
+<table class="table table-striped datatable">
+    <thead>
+        <tr> 
+            <th>N°</th><th>ID Employé</th><th>Type</th><th>Début</th><th>Fin</th><th>Statut</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for conge in conges %}
+        <tr>
+            <td>{{ conge.id }}</td>
+            <td>{{ conge.employee_id }}</td>
+            <td>{{ conge.type_conge }}</td>
+            <td>{{ conge.date_debut }}</td>
+            <td>{{ conge.date_fin }}</td>
+            <td>{{ conge.statut }}</td>
+            <td>
+              <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editCongeModal{{ conge.id }}">Modifier</button>
+              <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteCongeModal{{ conge.id }}">Supprimer</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="addCongeModal" tabindex="-1" aria-labelledby="addCongeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addCongeModalLabel">Ajouter un conge</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <form method="POST" action="/conges/add">
+        <div class="modal-body">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">{{ form.employee_id.label }} {{ form.employee_id(class="form-control") }}</div>
+            <div class="mb-3">{{ form.type_conge.label }} {{ form.type_conge(class="form-control") }}</div>
+            <div class="mb-3">{{ form.date_debut.label }} {{ form.date_debut(class="form-control") }}</div>
+            <div class="mb-3">{{ form.date_fin.label }} {{ form.date_fin(class="form-control") }}</div>
+            <div class="mb-3">{{ form.motif.label }} {{ form.motif(class="form-control") }}</div>
+            <div class="mb-3">{{ form.statut.label }} {{ form.statut(class="form-control") }}</div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            {{ form.submit(class="btn btn-success") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% for conge in conges %}
+<!-- Modal Modifier -->
+<div class="modal fade" id="editCongeModal{{ conge.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="/conges/edit/{{ conge.id }}">
+        <div class="modal-header">
+          <h5 class="modal-title">Modifier Congé</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          {{ form.hidden_tag() }}
+          <div class="mb-3"><label>ID Employé</label><input type="text" name="employee_id" value="{{ conge.employee_id }}" class="form-control"></div>
+          <div class="mb-3"><label>Type</label><input type="text" name="type_conge" value="{{ conge.type_conge }}" class="form-control"></div>
+          <div class="mb-3"><label>Date Début</label><input type="date" name="date_debut" value="{{ conge.date_debut }}" class="form-control"></div>
+          <div class="mb-3"><label>Date Fin</label><input type="date" name="date_fin" value="{{ conge.date_fin }}" class="form-control"></div>
+          <div class="mb-3"><label>Motif</label><textarea name="motif" class="form-control">{{ conge.motif }}</textarea></div>
+          <div class="mb-3"><label>Statut</label><input type="text" name="statut" value="{{ conge.statut }}" class="form-control"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+          <button type="submit" class="btn btn-success">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Supprimer -->
+<div class="modal fade" id="deleteCongeModal{{ conge.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="/conges/delete/{{ conge.id }}">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmer la suppression</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Voulez-vous vraiment supprimer ce congé pour l'employé ID {{ conge.employee_id }} ?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-danger">Supprimer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}

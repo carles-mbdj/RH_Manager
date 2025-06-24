@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Liste des employés</h2>
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeModal">
+    Ajouter un employé
+</button>
+
+<a href="{{ url_for('rh.export_employes_excel') }}" class="btn btn-outline-primary me-1">
+  <i class="bi bi-file-earmark-excel"></i> Export Excel
+</a>
+
+<a href="{{ url_for('rh.export_employes_pdf') }}" target="_blank" class="btn btn-outline-danger">
+  <i class="bi bi-file-earmark-pdf"></i> Export PDF
+</a>
+
+<table class="table table-striped datatable">
+    <thead>
+        <tr>
+            <th>ID</th><th>Nom</th><th>Poste</th><th>Département</th><th>Contact</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for emp in employes %}
+        <tr>            
+          <td>{{ emp.id }}</td>
+          <td>{{ emp.nom }}</td>
+          <td>{{ emp.poste }}</td> 
+          <td>{{ emp.departement }}</td>
+        <td>{{ emp.email }} <br>+237 {{ emp.telephone }}</td>
+          <td>
+            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editEmployeModal{{ emp.id }}">Modifier</button>
+            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeModal{{ emp.id }}">Supprimer</button>
+          </td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal ajouter -->
+<div class="modal fade" id="addEmployeModal" tabindex="-1" aria-labelledby="addEmployeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addEmployeModalLabel">Ajouter un employé</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <form method="POST" action="/employes/add">
+        <div class="modal-body">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">{{ form.nom.label }} {{ form.nom(class="form-control") }}</div>
+          <div class="mb-3">{{ form.poste.label }} {{ form.poste(class="form-control") }}</div>
+          <div class="mb-3">{{ form.departement.label }} {{ form.departement(class="form-control") }}</div>
+          <div class="mb-3">{{ form.email.label }} {{ form.email(class="form-control") }}</div>
+          <div class="mb-3">{{ form.telephone.label }} {{ form.telephone(class="form-control") }}</div>
+          <div class="mb-3">{{ form.type_contrat.label }} {{ form.type_contrat(class="form-control") }}</div>
+          <div class="mb-3">{{ form.date_embauche.label }} {{ form.date_embauche(class="form-control") }}</div>
+          <div class="mb-3">{{ form.statut.label }} {{ form.statut(class="form-control") }}</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+          {{ form.submit(class="btn btn-success") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Modifier pour chaque employé -->
+{% for emp in employes %}
+<div class="modal fade" id="editEmployeModal{{ emp.id }}" tabindex="-1" aria-labelledby="editEmployeModalLabel{{ emp.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="/employes/edit/{{ emp.id }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editEmployeModalLabel{{ emp.id }}">Modifier {{ emp.nom }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            <label>Nom</label>
+            <input type="text" name="nom" value="{{ emp.nom }}" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Poste</label>
+            <input type="text" name="poste" value="{{ emp.poste }}" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Département</label>
+            <input type="text" name="departement" value="{{ emp.departement }}" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Email</label>
+            <input type="email" name="email" value="{{ emp.email }}" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Téléphone</label>
+            <input type="text" name="telephone" value="{{ emp.telephone }}" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Type de contrat</label>
+            <input type="text" name="type_contrat" value="{{ emp.type_contrat }}" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Date d'embauche</label>
+            <input type="date" name="date_embauche" value="{{ emp.date_embauche }}" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Statut</label>
+            <input type="text" name="statut" value="{{ emp.statut }}" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+          <button type="submit" class="btn btn-success">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Modal Supprimer pour chaque employé -->
+{% for emp in employes %}
+<div class="modal fade" id="deleteEmployeModal{{ emp.id }}" tabindex="-1" aria-labelledby="deleteEmployeModalLabel{{ emp.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="/employes/delete/{{ emp.id }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteEmployeModalLabel{{ emp.id }}">Confirmer la suppression</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          Voulez-vous vraiment supprimer <strong>{{ emp.nom }}</strong> ?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-danger">Supprimer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
