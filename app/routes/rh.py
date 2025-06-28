@@ -5,6 +5,7 @@ from io import BytesIO
 from weasyprint import HTML
 from app.models import Employee, Absence, Conge
 from app.forms import EmployeeForm, AbsenceForm, CongeForm
+from flask_login import login_required
 
 rh_bp = Blueprint('rh', __name__)
 
@@ -12,6 +13,7 @@ rh_bp = Blueprint('rh', __name__)
 
 # ---- Employés ----
 @rh_bp.route('/employes')
+@login_required
 def list_employes():
     employes = Employee.query.all()
     form = EmployeeForm()
@@ -41,6 +43,7 @@ def add_employe():
 
 # ---- Absences ----
 @rh_bp.route('/absences')
+@login_required
 def list_absences():
     absences = Absence.query.all()
     form = AbsenceForm()
@@ -69,6 +72,7 @@ def add_absence():
 
 # ---- Congés ----
 @rh_bp.route('/conges')
+@login_required
 def list_conges():
     conges = Conge.query.all()
     form = CongeForm()

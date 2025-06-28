@@ -1,5 +1,7 @@
 from . import db
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 
 class Employee(db.Model):
     __tablename__ = 'employee'
@@ -90,15 +92,30 @@ class Entretien(db.Model):
     def __repr__(self):
         return f"<Entretien {self.titre} pour candidat {self.candidat_id}>"
 
-class Utilisateur(db.Model):
-    __tablename__ = 'utilisateur'
-
+class Evaluation(db.Model):
+    __tablename__ = 'evaluation'
     id = db.Column(db.Integer, primary_key=True)
-    nom = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    mot_de_passe = db.Column(db.String(255), nullable=False)
-    telephone = db.Column(db.String(20), unique=True, nullable=False)
-    photo_profil = db.Column(db.String(200))
-    role = db.Column(db.String(50), default='Utilisateur')
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
-    derniere_connexion = db.Column(db.DateTime)
+    employe_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    periode = db.Column(db.String(50), nullable=False)
+    score = db.Column(db.Float, nullable=False)
+    commentaire = db.Column(db.Text, nullable=True)
+    date_evaluation = db.Column(db.Date, default=datetime.utcnow)
+
+    employe = db.relationship('Employee', backref='evaluations')
+
+class Utilisateur(UserMixin, db.Model):
+    __tablename__ = 'utilisateur'
+    id = db.Column(db.Integer, primary_key=True)
+    nom_utilisateur = db.Column(db.String(50), unique=True, nullable=False)
+    nom_complet = db.Column(db.String(100))
+    email = db.Column(db.String(100), unique=True)
+    mot_de_passe_hash = db.Column(db.String(128))
+    role = db.Column(db.String(50))
+    actif = db.Column(db.Boolean, default=True)
+
+    def set_password(self, mot_de_passe):
+        self.mot_de_passe_hash = generate_password_hash(mot_de_passe)
+
+    def check_password(self, mot_de_passe):
+        return check_password_hash(self.mot_de_passe_hash, mot_de_passe)
+

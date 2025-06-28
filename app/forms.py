@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, DateField, SubmitField, BooleanField, TextAreaField, SelectField
-from wtforms.validators import DataRequired, Email
+from wtforms import StringField, DateField, SubmitField, BooleanField, TextAreaField, SelectField, PasswordField
+from wtforms.validators import DataRequired, Email, Length
 
 class EmployeeForm(FlaskForm):
     nom = StringField('Nom', validators=[DataRequired()])
@@ -40,3 +40,12 @@ class RecrutementForm(FlaskForm):
     date_cloture = DateField('Date de clôture', format='%Y-%m-%d')
     statut = StringField('Statut')
     submit = SubmitField('Enregistrer')
+
+class FormUtilisateur(FlaskForm):
+    nom_utilisateur = StringField('Nom d\'utilisateur', validators=[DataRequired(), Length(max=50)])
+    nom_complet = StringField('Nom complet', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    role = SelectField('Rôle', choices=[('Administrateur', 'Administrateur'), ('RH', 'RH'), ('Comptable', 'Comptable'), ('Directeur', 'Directeur'), ('Employe', 'Employe')], validators=[DataRequired()])
+    mot_de_passe = PasswordField('Mot de passe', validators=[DataRequired(), Length(min=6)])
+    actif = BooleanField('Compte actif', default=True)
+    submit = SubmitField('Ajouter')

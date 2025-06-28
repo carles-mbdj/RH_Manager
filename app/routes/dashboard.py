@@ -20,6 +20,4 @@ def dashboard():
 
     dernier_recrutement = db.session.query(Employee).order_by(Employee.date_embauche.desc()).first()
 
-    return render_template('dashboard.html', total_employes=total_employes, absences_en_cours=absences_en_cours, 
-                           #jours_conges_restants=jours_conges_restants, 
-                           dernier_recrutement=dernier_recrutement)
+    return render_template('dashboard.html', total_employes=total_employes, absences_en_cours=absences_en_cours, dernier_recrutement=dernier_recrutement)

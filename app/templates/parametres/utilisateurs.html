@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Utilisateurs du système</h2>
+
+  <!-- Bouton modal -->
+  <button class="btn btn-primary my-3" data-bs-toggle="modal" data-bs-target="#modalAjoutUtilisateur">Ajouter un utilisateur</button>
+
+  <!-- Tableau -->
+  <table class="table table-light table-hover">
+    <thead>
+      <tr>
+        <th>Nom d'utilisateur</th>
+        <th>Nom complet</th>
+        <th>Rôle</th>
+        <th>Email</th>
+        <th>Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in utilisateurs %}
+        <tr>
+          <td>{{ user.nom_utilisateur }}</td>
+          <td>{{ user.nom_complet }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            {% if user.actif %}
+              <span class="badge bg-success">Actif</span>
+            {% else %}
+              <span class="badge bg-secondary">Inactif</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalAjoutUtilisateur" tabindex="-1" aria-labelledby="modalAjoutUtilisateurLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content text-dark bg-light">
+      <div class="modal-header">
+        <h5 class="modal-title">Ajouter un utilisateur</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST">
+        <div class="modal-body">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">{{ form.nom_utilisateur.label }} {{ form.nom_utilisateur(class="form-control") }}</div>
+          <div class="mb-3">{{ form.nom_complet.label }} {{ form.nom_complet(class="form-control") }}</div>
+          <div class="mb-3">{{ form.email.label }} {{ form.email(class="form-control") }}</div>
+          <div class="mb-3">{{ form.role.label }} {{ form.role(class="form-select") }}</div>
+          <div class="mb-3">{{ form.mot_de_passe.label }} {{ form.mot_de_passe(class="form-control") }}</div>
+          <div class="form-check form-switch">{{ form.actif(class="form-check-input") }} {{ form.actif.label }}</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          {{ form.submit(class="btn btn-primary") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

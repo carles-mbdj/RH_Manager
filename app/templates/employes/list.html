@@ -31,6 +31,10 @@
           <td>
             <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editEmployeModal{{ emp.id }}">Modifier</button>
             <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeModal{{ emp.id }}">Supprimer</button>
+            <a href="{{ url_for('evaluation.list_evaluations', employe_id=emp.id) }}" 
+               class="btn btn-outline-info btn-sm" title="Évaluations">
+               <i class="bi bi-clipboard-data"></i>
+            </a>
           </td>
 
         </tr>
