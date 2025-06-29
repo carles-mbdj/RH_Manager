@@ -2,11 +2,13 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from datetime import datetime
 from app import db
 from app.models import Evaluation, Employee
+from flask_login import login_required
 
 
 evaluation_bp = Blueprint('evaluation', __name__)
 
 @evaluation_bp.route('/employes/<int:employe_id>/evaluations')
+@login_required
 def list_evaluations(employe_id):
     employe = Employee.query.get_or_404(employe_id)
     return render_template('evaluations/list.html', employe=employe)

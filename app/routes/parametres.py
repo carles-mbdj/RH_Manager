@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.models import Utilisateur, db
 from app.forms import FormUtilisateur
+from flask_login import login_required
 
 parametres_bp = Blueprint('parametres', __name__)
 
 @parametres_bp.route('/parametres', methods=['GET', 'POST'])
+@login_required
 def utilisateurs():
     form = FormUtilisateur()
     utilisateurs = Utilisateur.query.all()

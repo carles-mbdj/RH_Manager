@@ -2,10 +2,12 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from datetime import datetime
 from app import db
 from app.models import OffreEmploi, Candidat, Entretien
+from flask_login import login_required
 
 recrutement_bp = Blueprint('recrutement', __name__)
 
 @recrutement_bp.route('/recrutement')
+@login_required
 def list_offres():
     # Récupère toutes les offres
     offres = OffreEmploi.query.filter(OffreEmploi.statut != 'Supprimée').all()

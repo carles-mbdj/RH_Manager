@@ -19,8 +19,7 @@ def login():
 
         flash("Email ou mot de passe incorrect", "danger")
 
-    #return render_template('auth/login.html')
-    return render_template('dashboard.html')
+    return render_template('auth/login.html')
 
 
 @auth_bp.route('/logout')

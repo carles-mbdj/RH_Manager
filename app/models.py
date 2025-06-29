@@ -114,7 +114,11 @@ class Utilisateur(UserMixin, db.Model):
     actif = db.Column(db.Boolean, default=True)
 
     def set_password(self, mot_de_passe):
-        self.mot_de_passe_hash = generate_password_hash(mot_de_passe)
+        self.mot_de_passe_hash = generate_password_hash(
+            mot_de_passe,
+            method='pbkdf2:sha256',  # ⬅️ Forcé ici
+            salt_length=8
+        )
 
     def check_password(self, mot_de_passe):
         return check_password_hash(self.mot_de_passe_hash, mot_de_passe)

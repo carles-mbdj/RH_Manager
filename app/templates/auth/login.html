@@ -9,6 +9,16 @@
   <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card p-4 shadow" style="min-width: 400px;">
       <h4 class="mb-3 text-center">Connexion RH Manager</h4>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
       <form method="POST">
         <div class="mb-3">
           <label>Email</label>

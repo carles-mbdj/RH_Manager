@@ -2,11 +2,13 @@ from flask import Blueprint, render_template
 from app.models import Employee, Absence
 from app import db
 from datetime import date
+from flask_login import login_required
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/')
 @dashboard_bp.route('/dashboard')
+@login_required
 def dashboard():
     total_employes = Employee.query.count()
 
