@@ -49,3 +49,12 @@ class FormUtilisateur(FlaskForm):
     mot_de_passe = PasswordField('Mot de passe', validators=[DataRequired(), Length(min=6)])
     actif = BooleanField('Compte actif', default=True)
     submit = SubmitField('Ajouter')
+
+class RoleForm(FlaskForm):
+    nom = StringField('Nom du rôle', validators=[DataRequired()])
+    emp_perm = BooleanField('Employés')
+    conge_perm = BooleanField('Congés')
+    paie_perm = BooleanField('Paie')
+    recrutement_perm = BooleanField('Recrutement')
+    parametre_perm = BooleanField('Paramètres')
+    submit = SubmitField('Ajouter le rôle')

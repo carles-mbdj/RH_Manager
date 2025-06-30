@@ -7,20 +7,23 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
+        user_name = request.form['nom_utilisateur']
         mot_de_passe = request.form['mot_de_passe']
-        user = Utilisateur.query.filter_by(email=email).first()
+        user = Utilisateur.query.filter_by(nom_utilisateur=user_name).first()
 
-        if user and user.check_password(mot_de_passe):
-            login_user(user)
-
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('dashboard.dashboard'))
-
-        flash("Email ou mot de passe incorrect", "danger")
-
+        if not user or not user.check_password(mot_de_passe):
+            flash("Pseudo ou mot de passe incorrect", "danger")
+            return render_template('auth/login.html')
+            
+        if not user.actif:
+            flash("Votre compte est inactif. Veuillez contacter l’administrateur.", "warning")
+            return render_template('auth/login.html')
+        
+        login_user(user)
+        next_page = request.args.get('next')
+        return redirect(next_page or url_for('dashboard.dashboard'))
+    
     return render_template('auth/login.html')
-
 
 @auth_bp.route('/logout')
 @login_required

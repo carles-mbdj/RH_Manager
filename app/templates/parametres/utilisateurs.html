@@ -1,5 +1,21 @@
 {% extends 'base.html' %}
 {% block content %}
+
+<ul class="nav nav-tabs mb-4">
+  <li class="nav-item">
+    <a class="nav-link {% if active_tab == 'utilisateurs' %}active{% endif %}" href="{{ url_for('parametres.utilisateurs') }}">Utilisateurs</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if active_tab == 'conges' %}active{% endif %}" href="#">Congés</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if active_tab == 'paie' %}active{% endif %}" href="#">Paie</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if active_tab == 'integrations' %}active{% endif %}" href="#">Intégrations</a>
+  </li>
+</ul>
+
 <div class="container mt-4">
   <h2>Utilisateurs du système</h2>
 
@@ -15,6 +31,7 @@
         <th>Rôle</th>
         <th>Email</th>
         <th>Statut</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -26,15 +43,95 @@
           <td>{{ user.email }}</td>
           <td>
             {% if user.actif %}
-              <span class="badge bg-success">Actif</span>
+              <span class="badge bg-success">Actif</span> 
             {% else %}
               <span class="badge bg-secondary">Inactif</span>
             {% endif %}
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modifierUtilisateurModal{{ user.id }}">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ user.id }}">
+              <i class="bi bi-trash"></i>
+            </button>
           </td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
+  <hr class="my-4">
+
+<h5>Rôles et permissions</h5>
+
+<table class="table table-bordered table-hover mt-3">
+  <thead class="table-light">
+    <tr>
+      <th>Rôle</th>
+      <th>Permissions</th>
+      <th style="width: 150px;">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for role in roles %}
+    <tr>
+      <td>{{ role.nom }}</td>
+      <td>
+        {% if role.permissions %}
+          <ul class="mb-0">
+            {% for perm in role.permissions %}
+              <li>{{ perm.nom }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <span class="text-muted">Aucune permission</span>
+        {% endif %}
+      </td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                data-bs-target="#editPermissionsModal{{ role.id }}">
+          Modifier
+        </button>
+      </td>
+    </tr>
+
+    <!-- Modal de modification des permissions -->
+    <div class="modal fade" id="editPermissionsModal{{ role.id }}" tabindex="-1"
+         aria-labelledby="editPermissionsModalLabel{{ role.id }}" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <form method="POST" action="{{ url_for('rh.update_role_permissions', role_id=role.id) }}">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editPermissionsModalLabel{{ role.id }}">
+                Modifier les permissions - {{ role.nom }}
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"
+                      aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+              {% for permission in permissions %}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox"
+                       name="permissions" value="{{ permission.id }}"
+                       id="perm_{{ permission.id }}_r{{ role.id }}"
+                       {% if permission in role.permissions %}checked{% endif %}>
+                <label class="form-check-label" for="perm_{{ permission.id }}_r{{ role.id }}">
+                  {{ permission.nom }}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </tbody>
+</table>
 </div>
 
 <!-- Modal -->
@@ -63,4 +160,67 @@
     </div>
   </div>
 </div>
+
+{% for user in utilisateurs %}
+<!-- Modal Modifier Utilisateur -->
+<div class="modal fade" id="modifierUtilisateurModal{{ user.id }}" tabindex="-1" aria-labelledby="modifierUtilisateurModalLabel{{ user.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('parametres.modifier_utilisateur', id=user.id) }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modifierUtilisateurModalLabel{{ user.id }}">Modifier l’utilisateur</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nom d’utilisateur</label>
+            <input type="text" class="form-control" name="nom_utilisateur" value="{{ user.nom_utilisateur }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nom complet</label>
+            <input type="text" class="form-control" name="nom_complet" value="{{ user.nom_complet }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" value="{{ user.email }}" required>
+          </div>
+          <div class="mb-3">
+            {{ form.role.label }} {{ form.role(class="form-select") }}
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" name="actif" id="actifSwitch{{ user.id }}" {% if user.actif %}checked{% endif %}>
+            <label class="form-check-label" for="actifSwitch{{ user.id }}">Compte actif</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="confirmDeleteModal{{ user.id }}" tabindex="-1" aria-labelledby="confirmDeleteLabel{{ user.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('parametres.supprimer_utilisateur', id=user.id) }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmDeleteLabel{{ user.id }}">Confirmer la suppression</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Voulez-vous vraiment supprimer l’utilisateur <strong>{{ user.nom_utilisateur }}</strong> ?
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger">Supprimer</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
 {% endblock %}

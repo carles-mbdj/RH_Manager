@@ -6,6 +6,7 @@ from weasyprint import HTML
 from app.models import Employee, Absence, Conge
 from app.forms import EmployeeForm, AbsenceForm, CongeForm
 from flask_login import login_required
+from app.utils.permissions import permission_requise
 
 rh_bp = Blueprint('rh', __name__)
 

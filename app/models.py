@@ -103,23 +103,42 @@ class Evaluation(db.Model):
 
     employe = db.relationship('Employee', backref='evaluations')
 
-class Utilisateur(UserMixin, db.Model):
+class Utilisateur(db.Model, UserMixin):
     __tablename__ = 'utilisateur'
     id = db.Column(db.Integer, primary_key=True)
-    nom_utilisateur = db.Column(db.String(50), unique=True, nullable=False)
-    nom_complet = db.Column(db.String(100))
-    email = db.Column(db.String(100), unique=True)
-    mot_de_passe_hash = db.Column(db.String(128))
-    role = db.Column(db.String(50))
+    nom_utilisateur = db.Column(db.String(64), unique=True, nullable=False)
+    nom_complet = db.Column(db.String(128))
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    mot_de_passe_hash = db.Column(db.String(256), nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     actif = db.Column(db.Boolean, default=True)
+    role = db.relationship('Role', backref='utilisateurs')
 
     def set_password(self, mot_de_passe):
         self.mot_de_passe_hash = generate_password_hash(
             mot_de_passe,
-            method='pbkdf2:sha256',  # ⬅️ Forcé ici
+            method='pbkdf2:sha256',
             salt_length=8
         )
 
     def check_password(self, mot_de_passe):
         return check_password_hash(self.mot_de_passe_hash, mot_de_passe)
+
+class Role(db.Model):
+    __tablename__ = 'role'
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(50), unique=True, nullable=False)
+    permissions = db.relationship('Permission', secondary='role_permission', backref='roles')
+
+class Permission(db.Model):
+    __tablename__ = 'permission'
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(100), unique=True, nullable=False)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+
+# Table d'association entre rôle et permission
+role_permission = db.Table('role_permission',
+    db.Column('role_id', db.Integer, db.ForeignKey('role.id')),
+    db.Column('permission_id', db.Integer, db.ForeignKey('permission.id'))
+)
 

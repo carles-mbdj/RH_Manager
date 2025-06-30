@@ -70,7 +70,7 @@
       <span class="navbar-brand mb-0">RH Manager</span>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <span class="text-white">{{ current_user.nom }}</span>
+      <span class="text-white">{{ current_user.nom_utilisateur }}</span>
       <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Déconnexion</a>
     </div>
   </nav>
