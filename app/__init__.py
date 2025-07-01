@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_mail import Mail
 from flask_login import LoginManager
+from app.forms import ModifierMonCompteForm
+from flask_login import current_user
 
 # Initialiser les extensions
 db = SQLAlchemy()
@@ -18,6 +20,7 @@ login_manager.login_view = 'auth.login'
 def load_user(user_id):
     return Utilisateur.query.get(int(user_id))
 
+
 def create_app():
     app = Flask(__name__)
     login_manager.init_app(app)
@@ -29,6 +32,15 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
+    
+    @app.context_processor
+    def inject_form_profil():
+        form = ModifierMonCompteForm()
+        if current_user.is_authenticated:
+            form.nom_utilisateur.data = current_user.nom_utilisateur
+            form.nom_complet.data = current_user.nom_complet
+            form.email.data = current_user.email
+        return dict(form=form)
 
     # Importer les modèles pour que Flask-Migrate les connaisse
     from . import models
@@ -56,5 +68,6 @@ def create_app():
     app.register_blueprint(parametres_bp)
 
     return app
+
 
 

@@ -15,6 +15,7 @@ rh_bp = Blueprint('rh', __name__)
 # ---- Employés ----
 @rh_bp.route('/employes')
 @login_required
+@permission_requise('employes')
 def list_employes():
     employes = Employee.query.all()
     form = EmployeeForm()
@@ -45,6 +46,7 @@ def add_employe():
 # ---- Absences ----
 @rh_bp.route('/absences')
 @login_required
+@permission_requise('absences_conges')
 def list_absences():
     absences = Absence.query.all()
     form = AbsenceForm()
@@ -74,6 +76,7 @@ def add_absence():
 # ---- Congés ----
 @rh_bp.route('/conges')
 @login_required
+@permission_requise('absences_conges')
 def list_conges():
     conges = Conge.query.all()
     form = CongeForm()

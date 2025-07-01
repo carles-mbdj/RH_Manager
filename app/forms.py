@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, DateField, SubmitField, BooleanField, TextAreaField, SelectField, PasswordField
-from wtforms.validators import DataRequired, Email, Length
+from wtforms.validators import DataRequired, Email, Length, Optional
+from wtforms_sqlalchemy.fields import QuerySelectField
 
 class EmployeeForm(FlaskForm):
     nom = StringField('Nom', validators=[DataRequired()])
@@ -45,16 +46,18 @@ class FormUtilisateur(FlaskForm):
     nom_utilisateur = StringField('Nom d\'utilisateur', validators=[DataRequired(), Length(max=50)])
     nom_complet = StringField('Nom complet', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    role = SelectField('Rôle', choices=[('Administrateur', 'Administrateur'), ('RH', 'RH'), ('Comptable', 'Comptable'), ('Directeur', 'Directeur'), ('Employe', 'Employe')], validators=[DataRequired()])
+    role = QuerySelectField('Rôle', get_label='nom', allow_blank=False)
     mot_de_passe = PasswordField('Mot de passe', validators=[DataRequired(), Length(min=6)])
     actif = BooleanField('Compte actif', default=True)
     submit = SubmitField('Ajouter')
 
-class RoleForm(FlaskForm):
+class AjouterRoleForm(FlaskForm):
     nom = StringField('Nom du rôle', validators=[DataRequired()])
-    emp_perm = BooleanField('Employés')
-    conge_perm = BooleanField('Congés')
-    paie_perm = BooleanField('Paie')
-    recrutement_perm = BooleanField('Recrutement')
-    parametre_perm = BooleanField('Paramètres')
-    submit = SubmitField('Ajouter le rôle')
+    submit = SubmitField("Ajouter")
+
+class ModifierMonCompteForm(FlaskForm):
+    nom_utilisateur = StringField('Nom d’utilisateur', validators=[DataRequired()])
+    nom_complet = StringField('Nom complet')
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    mot_de_passe = PasswordField('Nouveau mot de passe', validators=[Optional()])
+    submit = SubmitField('Enregistrer')

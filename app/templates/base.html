@@ -57,6 +57,22 @@
         margin-left: 0;
       }
     }
+
+    .animate-slide {
+    transform: translateX(100%);
+    opacity: 0;
+    transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+  }
+
+  .animate-slide.show {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .fade-out {
+    transform: translateX(100%);
+    opacity: 0;
+  }
   </style>
 </head>
 <body>
@@ -70,8 +86,20 @@
       <span class="navbar-brand mb-0">RH Manager</span>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <span class="text-white">{{ current_user.nom_utilisateur }}</span>
-      <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Déconnexion</a>
+      <div class="dropdown">
+        <button class="btn btn-outline-light rounded-pill d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="gap: 0.5rem;">
+          <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+            <i class="bi bi-person"></i>
+          </div>
+          <span>{{ current_user.nom_utilisateur }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+          <li class="dropdown-item disabled"> {{ current_user.role.nom }}</li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#profilModal">Modifier mes informations</button></li>
+          <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">Déconnexion</a></li>
+        </ul>
+      </div>
     </div>
   </nav>
 
@@ -79,29 +107,60 @@
   <div class="sidebar-fixed position-fixed p-3 d-none d-md-block">
     <ul class="nav nav-pills flex-column mb-auto">
       <li class="nav-item">
-        <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}"><i class="bi bi-speedometer2 me-2"></i> Tableau de bord</a>
-      </li>
-      <li>
-        <a href="/employes" class="nav-link {% if '/employes' in request.path %}active{% endif %}"><i class="bi bi-people-fill me-2"></i> Employés</a>
-      </li>
-      <li>
-        <a href="/absences" class="nav-link {% if '/absences' in request.path %}active{% endif %}"><i class="bi bi-calendar-x-fill me-2"></i> Absences</a>
-      </li>
-      <li>
-        <a href="/conges" class="nav-link {% if '/conges' in request.path %}active{% endif %}"><i class="bi bi-calendar-check-fill me-2"></i> Congés & Absences</a>
-      </li>
-      <li>
-        <a href="/evaluations" class="nav-link {% if '/evaluations' in request.path %}active{% endif %}"><i class="bi bi-clipboard-check-fill me-2"></i> Évaluations</a>
-      </li>
-      <li>
-        <a href="/paie" class="nav-link {% if '/paie' in request.path %}active{% endif %}"><i class="bi bi-currency-dollar me-2"></i> Paie</a>
-      </li>
-      <li>
-        <a href="/recrutement" class="nav-link {% if '/recrutement' in request.path %}active{% endif %}"><i class="bi bi-briefcase-fill me-2"></i> Recrutement</a>
-      </li>
-      <li>
-        <a href="/parametres" class="nav-link {% if '/parametres' in request.path %}active{% endif %}"><i class="bi bi-gear-fill me-2"></i> Paramètres</a>
-      </li>
+  <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+    <i class="bi bi-speedometer2 me-2"></i> Tableau de bord
+  </a>
+</li>
+
+{% set codes = current_user.role.permissions | map(attribute='code') | list %}
+{% if 'employes' in codes %}
+<li>
+  <a href="/employes" class="nav-link {% if '/employes' in request.path %}active{% endif %}">
+    <i class="bi bi-people-fill me-2"></i> Employés
+  </a>
+</li>
+{% endif %}
+
+{% if 'absences_conges' in codes %}
+<li>
+  <a href="/conges" class="nav-link {% if '/conges' in request.path %}active{% endif %}">
+    <i class="bi bi-calendar-check-fill me-2"></i> Absences & Congés
+  </a>
+</li>
+{% endif %}
+
+{% if 'evaluations' in codes %}
+<li>
+  <a href="/evaluations" class="nav-link {% if '/evaluations' in request.path %}active{% endif %}">
+    <i class="bi bi-clipboard-check-fill me-2"></i> Évaluations
+  </a>
+</li>
+{% endif %}
+
+{% if 'paie' in codes %}
+<li>
+  <a href="/paie" class="nav-link {% if '/paie' in request.path %}active{% endif %}">
+    <i class="bi bi-currency-dollar me-2"></i> Paie
+  </a>
+</li>
+{% endif %}
+
+{% if 'recrutement' in codes %}
+<li>
+  <a href="/recrutement" class="nav-link {% if '/recrutement' in request.path %}active{% endif %}">
+    <i class="bi bi-briefcase-fill me-2"></i> Recrutement
+  </a>
+</li>
+{% endif %}
+
+{% if 'parametres' in codes %}
+<li>
+  <a href="/parametres" class="nav-link {% if '/parametres' in request.path %}active{% endif %}">
+    <i class="bi bi-gear-fill me-2"></i> Paramètres
+  </a>
+</li>
+{% endif %}
+
     </ul>
   </div>
 
@@ -114,29 +173,60 @@
     <div class="offcanvas-body">
       <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item">
-          <a href="/" class="nav-link text-dark {% if request.path == '/' %}active bg-primary text-white{% endif %}"><i class="bi bi-speedometer2 me-2"></i> Tableau de bord</a>
-        </li>
-        <li>
-          <a href="/employes" class="nav-link text-dark {% if '/employes' in request.path %}active bg-primary text-white{% endif %}"><i class="bi bi-people-fill me-2"></i> Employés</a>
-        </li>
-        <li>
-          <a href="/absences" class="nav-link text-dark {% if '/absences' in request.path %}active bg-primary text-white{% endif %}"><i class="bi bi-calendar-x-fill me-2"></i> Absences</a>
-        </li>
-        <li>
-          <a href="/conges" class="nav-link text-dark {% if '/conges' in request.path %}active bg-primary text-white{% endif %}"><i class="bi bi-calendar-check-fill me-2"></i> Congés & Absences</a>
-        </li>
-        <li>
-          <a href="/evaluations" class="nav-link text-dark {% if '/evaluations' in request.path %}active bg-primary text-white{% endif %}"><i class="bi bi-clipboard-check-fill me-2"></i> Évaluations</a>
-        </li>
-        <li>
-          <a href="/paie" class="nav-link text-dark {% if '/paie' in request.path %}active bg-primary text-white{% endif %}"><i class="bi bi-currency-dollar me-2"></i> Paie</a>
-        </li>
-        <li>
-          <a href="/recrutement" class="nav-link text-dark {% if '/recrutement' in request.path %}active bg-primary text-white{% endif %}"><i class="bi bi-briefcase-fill me-2"></i> Recrutement</a>
-        </li>
-        <li>
-          <a href="/parametres" class="nav-link text-dark {% if '/parametres' in request.path %}active bg-primary text-white{% endif %}"><i class="bi bi-gear-fill me-2"></i> Paramètres</a>
-        </li>
+  <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+    <i class="bi bi-speedometer2 me-2"></i> Tableau de bord
+  </a>
+</li>
+
+{% set codes = current_user.role.permissions | map(attribute='code') | list %}
+{% if 'employes' in codes %}
+<li>
+  <a href="/employes" class="nav-link {% if '/employes' in request.path %}active{% endif %}">
+    <i class="bi bi-people-fill me-2"></i> Employés
+  </a>
+</li>
+{% endif %}
+
+{% if 'absences_conges' in codes %}
+<li>
+  <a href="/conges" class="nav-link {% if '/conges' in request.path %}active{% endif %}">
+    <i class="bi bi-calendar-check-fill me-2"></i> Absences & Congés
+  </a>
+</li>
+{% endif %}
+
+{% if 'evaluations' in codes %}
+<li>
+  <a href="/evaluations" class="nav-link {% if '/evaluations' in request.path %}active{% endif %}">
+    <i class="bi bi-clipboard-check-fill me-2"></i> Évaluations
+  </a>
+</li>
+{% endif %}
+
+{% if 'paie' in codes %}
+<li>
+  <a href="/paie" class="nav-link {% if '/paie' in request.path %}active{% endif %}">
+    <i class="bi bi-currency-dollar me-2"></i> Paie
+  </a>
+</li>
+{% endif %}
+
+{% if 'recrutement' in codes %}
+<li>
+  <a href="/recrutement" class="nav-link {% if '/recrutement' in request.path %}active{% endif %}">
+    <i class="bi bi-briefcase-fill me-2"></i> Recrutement
+  </a>
+</li>
+{% endif %}
+
+{% if 'parametres' in codes %}
+<li>
+  <a href="/parametres" class="nav-link {% if '/parametres' in request.path %}active{% endif %}">
+    <i class="bi bi-gear-fill me-2"></i> Paramètres
+  </a>
+</li>
+{% endif %}
+
       </ul>
     </div>
   </div>
@@ -144,14 +234,97 @@
   <!-- Loader Global -->
 <div id="globalLoader" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 2000; display: none; justify-content: center; align-items: center;">
   <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
-    <span class="visually-hidden">Chargement...</span>
   </div>
+  <span class="visually text-primary">Chargement...</span>
 </div>
+
+<!-- Messages Flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="position-fixed top-1 end-0 p-3" style="z-index: 2000;">
+      {% for category, message in messages %}
+        <div class="toast align-items-center text-white bg-{{ 'danger' if category == 'error' else category }} border-5 show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+          <div class="d-flex">
+            <div class="toast-body">
+              {{ message }}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 
   <!-- Contenu principal -->
   <main class="content">
     {% block content %}{% endblock %}
   </main>
+
+  <!-- Modal : Modifier mes informations -->
+<div class="modal fade" id="profilModal" tabindex="-1" aria-labelledby="profilModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('parametres.modifier_mon_compte') }}" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="profilModalLabel">Modifier mes informations</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">{{ form.nom_utilisateur.label }} {{ form.nom_utilisateur(class="form-control") }}</div>
+        <div class="mb-3">{{ form.nom_complet.label }} {{ form.nom_complet(class="form-control") }}</div>
+        <div class="mb-3">{{ form.email.label }} {{ form.email(class="form-control") }}</div>
+        <div class="mb-3">{{ form.mot_de_passe.label }} {{ form.mot_de_passe(class="form-control") }}</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        {{ form.submit(class="btn btn-primary") }}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast de notifications stylées -->
+<!--<div id="flash-container" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000;"></div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const flashMessages = {{ get_flashed_messages(with_categories=true) | tojson }};
+    const flashContainer = document.getElementById('flash-container');
+
+    const icons = {
+      success: '✅',
+      error: '❌',
+      warning: '⚠️',
+      info: 'ℹ️'
+    };
+
+    const colors = {
+      success: 'border-start border-success border-4 bg-white text-success',
+      error: 'border-start border-danger border-4 bg-white text-danger',
+      warning: 'border-start border-warning border-4 bg-white text-warning',
+      info: 'border-start border-info border-4 bg-white text-info'
+    };
+
+    flashMessages.forEach(([category, message]) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = `toast align-items-center shadow mb-3 p-3 animate-slide ${colors[category] || 'text-dark'}`;
+      wrapper.innerHTML = `
+        <div class="d-flex align-items-center">
+          <div class="fs-3 me-3">${icons[category] || ''}</div>
+          <div class="toast-body flex-grow-1">
+            <strong class="me-2 text-capitalize">${category}</strong><br>${message}
+          </div>
+        </div>
+      `;
+      flashContainer.appendChild(wrapper);
+
+      setTimeout(() => {
+        wrapper.classList.add('fade-out');
+        setTimeout(() => wrapper.remove(), 1000);
+      }, 4000);
+    });
+  });
+</script>-->
 
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -180,7 +353,7 @@
     // Option : cacher le loader après 10 sec max en cas de blocage serveur
     setTimeout(() => {
       document.getElementById("globalLoader").style.display = "none";
-    }, 10000);
+    }, 1000);
 
   });
 </script>

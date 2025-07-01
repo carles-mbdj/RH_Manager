@@ -14,7 +14,6 @@ with app.app_context():
         nom_utilisateur="admin",
         nom_complet="Administrateur RH",
         email="admin@entreprise.com",
-        role="Administrateur",
         actif=True
     )
 

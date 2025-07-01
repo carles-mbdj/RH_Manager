@@ -3,11 +3,13 @@ from datetime import datetime
 from app import db
 from app.models import OffreEmploi, Candidat, Entretien
 from flask_login import login_required
+from app.utils.permissions import permission_requise
 
 recrutement_bp = Blueprint('recrutement', __name__)
 
 @recrutement_bp.route('/recrutement')
 @login_required
+@permission_requise('recrutement')
 def list_offres():
     # Récupère toutes les offres
     offres = OffreEmploi.query.filter(OffreEmploi.statut != 'Supprimée').all()

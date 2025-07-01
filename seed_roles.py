@@ -1,31 +1,24 @@
 from app import create_app, db
-from app.models import Role, Permission
+from app.models import Permission
+
 
 app = create_app()
+
+permissions = [
+    {"nom": "Employés", "code": "employes"},
+    {"nom": "Absences et Congés", "code": "absences_conges"},
+    {"nom": "Évaluations", "code": "evaluations"},
+    {"nom": "Paie", "code": "paie"},
+    {"nom": "Recrutement", "code": "recrutement"},
+    {"nom": "Paramètres", "code": "parametres"},
+]
+
 with app.app_context():
-    # Créer les permissions de base
-    permissions_data = [
-        ("Ajouter employé", "ajouter_employe"),
-        ("Modifier employé", "modifier_employe"),
-        ("Supprimer employé", "supprimer_employe"),
-        ("Gérer congés", "gerer_conges"),
-        ("Gérer absences", "gerer_absences"),
-        ("Voir recrutements", "voir_recrutements"),
-        ("Publier offre", "publier_offre"),
-        ("Gérer utilisateurs", "gerer_utilisateurs"),
-    ]
+    for perm in permissions:
+        # Évite les doublons
+        if not Permission.query.filter_by(code=perm["code"]).first():
+            new_perm = Permission(nom=perm["nom"], code=perm["code"])
+            db.session.add(new_perm)
 
-    for nom, code in permissions_data:
-        if not Permission.query.filter_by(code=code).first():
-            db.session.add(Permission(nom=nom, code=code))
     db.session.commit()
-
-    # Créer rôle Administrateur avec toutes les permissions
-    admin = Role.query.filter_by(nom='Administrateur').first()
-    if not admin:
-        admin = Role(nom='Administrateur')
-        admin.permissions = Permission.query.all()
-        db.session.add(admin)
-        db.session.commit()
-
-    print("✅ Rôles et permissions créés avec succès.")
+    print("✅ Permissions ajoutées avec succès.")

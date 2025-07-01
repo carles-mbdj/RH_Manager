@@ -1,17 +1,18 @@
 from functools import wraps
-from flask import redirect, url_for, flash
+from flask import abort
 from flask_login import current_user
 
-def permission_requise(code_permission):
+def permission_requise (code):
     def decorator(f):
         @wraps(f)
-        def wrapper(*args, **kwargs):
+        def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
-                flash("Vous devez être connecté.", "warning")
-                return redirect(url_for('auth.login'))
-            if current_user.role and any(p.code == code_permission for p in current_user.role.permissions):
-                return f(*args, **kwargs)
-            flash("Accès refusé : vous n'avez pas la permission requise.", "danger")
-            return redirect(url_for('dashboard.index'))
-        return wrapper
+                abort(403)
+            if not current_user.role:
+                abort(403)
+            permission_codes = [perm.code for perm in current_user.role.permissions]
+            if code not in permission_codes:
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
     return decorator
