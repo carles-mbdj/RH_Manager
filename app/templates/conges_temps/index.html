@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Congés & Présences</h2>
+<ul class="nav nav-tabs mb-4">
+  <li class="nav-item">
+    <a class="nav-link {% if active_tab == 'absences' %}active{% endif %}" href="{{ url_for('conges_temps.absences') }}">Absences</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if active_tab == 'conges' %}active{% endif %}" href="{{ url_for('conges_temps.conges') }}">Congés</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if active_tab == 'presences' %}active{% endif %}" href="{{ url_for('conges_temps.presences') }}">Présences</a>
+  </li>
+</ul>
+
+<div class="container mt-4">
+  {% if active_tab == 'conges' %}
+    {% include 'conges_temps/conges.html' %}
+  {% elif active_tab == 'presences' %}
+    {% include 'conges_temps/presences.html' %}
+  {% elif active_tab == 'absences' %}
+    {% include 'conges_temps/absences.html' %}
+  {% endif %}
+</div>
+
+{% endblock %}

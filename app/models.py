@@ -20,24 +20,28 @@ class Employee(db.Model):
         return f"<Employee {self.nom}>"
 
 class Absence(db.Model):
+    __tablename__ = 'absence'
     id = db.Column(db.Integer, primary_key=True)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
-    type_absence = db.Column(db.String(100))
-    date_debut = db.Column(db.Date)
-    date_fin = db.Column(db.Date)
-    motif = db.Column(db.Text)
-    justificatif = db.Column(db.Boolean)
-    statut = db.Column(db.String(50))
+    employe_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
+    date = db.Column(db.Date, nullable=False)
+    motif = db.Column(db.String(100), nullable=False)
+    justificatif = db.Column(db.String(200))  # fichier PDF/image
+    etat = db.Column(db.String(50), default='En attente')  # En attente, Justifiée, Non justifiée
+    impact_paie = db.Column(db.Boolean, default=False)
+
+    employe = db.relationship('Employee', backref='absences')
 
 class Conge(db.Model):
+    __tablename__ = 'conge'
     id = db.Column(db.Integer, primary_key=True)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
-    type_conge = db.Column(db.String(100))
-    date_debut = db.Column(db.Date)
-    date_fin = db.Column(db.Date)
-    motif = db.Column(db.Text)
-    statut = db.Column(db.String(50))
-    employe = db.relationship('Employee', backref='conges')
+    employe_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # Exemple : "Congé annuel", "Maladie", etc.
+    date_debut = db.Column(db.Date, nullable=False)
+    date_fin = db.Column(db.Date, nullable=False)
+    motif = db.Column(db.String(255))
+    statut = db.Column(db.String(20), default='En attente')  # En attente, Approuvé, Rejeté
+
+    employe = db.relationship("Employee", backref="conges")
 
 class OffreEmploi(db.Model):
     __tablename__ = 'offre_emploi'
@@ -142,3 +146,73 @@ role_permission = db.Table('role_permission',
     db.Column('permission_id', db.Integer, db.ForeignKey('permission.id'))
 )
 
+class Presence(db.Model):
+    __tablename__ = 'presence'
+    id = db.Column(db.Integer, primary_key=True)
+    employe_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    heure_arrivee = db.Column(db.Time, nullable=True)
+    heure_depart = db.Column(db.Time, nullable=True)
+    retard_minutes = db.Column(db.Integer, default=0)
+
+    employe = db.relationship("Employee", backref="presences")
+
+class TypeConge(db.Model):
+    __tablename__ = 'type_conge'
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(100), nullable=False)
+    duree_max_jours = db.Column(db.Integer, nullable=True)
+    validation_requise = db.Column(db.Boolean, default=False)
+
+class ParametresPaie(db.Model):
+    __tablename__ = 'parametres_paie'
+    id = db.Column(db.Integer, primary_key=True)
+    smic_horaire = db.Column(db.Float, nullable=False)
+    plafond_cnps = db.Column(db.Float, nullable=False)
+    taux_transport = db.Column(db.Float, nullable=False)
+    auto_calcule = db.Column(db.Boolean, default=False)
+    jour_paiement = db.Column(db.Integer, nullable=False)
+    heures_hebdo = db.Column(db.Integer, nullable=False)
+    hs_25 = db.Column(db.Integer, nullable=False)
+    hs_50 = db.Column(db.Integer, nullable=False)
+
+class CotisationSociale(db.Model):
+    __tablename__ = 'cotisation_sociale'
+    id = db.Column(db.Integer, primary_key=True)
+    libelle = db.Column(db.String(100))
+    taux_salarial = db.Column(db.Float)
+    taux_patronal = db.Column(db.Float)
+
+class ParametrePresence(db.Model):
+    __tablename__ = 'parametre_presence'
+    id = db.Column(db.Integer, primary_key=True)
+    heure_arrivee = db.Column(db.Time, nullable=False)
+    heure_depart = db.Column(db.Time, nullable=False)
+    tolerance_retard = db.Column(db.Integer, default=15)  # en minutes
+    notifier_retard = db.Column(db.Boolean, default=True)
+    notifier_absence = db.Column(db.Boolean, default=True)
+
+class DemandeConge(db.Model):
+    __tablename__ = 'demande_conge'
+    id = db.Column(db.Integer, primary_key=True)
+    reference = db.Column(db.String(20), unique=True)
+    employe_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
+    type = db.Column(db.String(50))
+    date_debut = db.Column(db.Date)
+    date_fin = db.Column(db.Date)
+    duree = db.Column(db.Integer)
+    motif = db.Column(db.Text)
+    statut = db.Column(db.String(20), default='En attente')
+    approbateur_id = db.Column(db.Integer, db.ForeignKey('utilisateur.id'))
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+
+class PresenceJournal(db.Model):
+    __tablename__ = 'presence_journal'
+    id = db.Column(db.Integer, primary_key=True)
+    employe_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
+    date = db.Column(db.Date)
+    heure_arrivee = db.Column(db.Time)
+    heure_depart = db.Column(db.Time)
+    retard_minutes = db.Column(db.Integer)
+    heures_effectuees = db.Column(db.Float)
+    statut = db.Column(db.String(20))  # Présent, Absent, En retard

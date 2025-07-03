@@ -1,0 +1,70 @@
+<!-- Onglet Absences -->
+<div class="tab-pane fade {% if active_tab == 'absences' %}show active{% endif %}" id="absences">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5>Gestion des absences</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAjoutAbsence">Nouvelle absence</button>
+  </div>
+
+  <!-- Tableau des absences -->
+  <table class="table table-bordered table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Employé</th>
+        <th>Date</th>
+        <th>Motif</th>
+        <th>Justificatif</th>
+        <th>État</th>
+        <th>Impact sur paie</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in absences %}
+        <tr>
+          <td>{{ a.employe.nom }}</td>
+          <td>{{ a.date.strftime('%d/%m/%Y') }}</td>
+          <td>{{ a.motif }}</td>
+          <td>
+            {% if a.justificatif %}
+              <a href="{{ url_for('static', filename='uploads/' ~ a.justificatif) }}" target="_blank">Voir</a>
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>
+            {% if a.etat == 'Justifiée' %}
+              <span class="badge bg-success">{{ a.etat }}</span>
+            {% elif a.etat == 'Non justifiée' %}
+              <span class="badge bg-danger">{{ a.etat }}</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">{{ a.etat }}</span>
+            {% endif %}
+          </td>
+          <td>{{ 'Oui' if a.impact_paie else 'Non' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="modal fade" id="modalAjoutAbsence" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="POST" enctype="multipart/form-data">
+      <div class="modal-header">
+        <h5 class="modal-title">Nouvelle absence</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        {{ form_absence.hidden_tag() }}
+        <div class="mb-3">{{ form_absence.employe_id.label }} {{ form_absence.employe_id(class="form-select") }}</div>
+        <div class="mb-3">{{ form_absence.date.label }} {{ form_absence.date(class="form-control") }}</div>
+        <div class="mb-3">{{ form_absence.motif.label }} {{ form_absence.motif(class="form-control") }}</div>
+        <div class="mb-3">{{ form_absence.justificatif.label }} {{ form_absence.justificatif(class="form-control") }}</div>
+        <div class="form-check">{{ form_absence.impact_paie(class="form-check-input") }} {{ form_absence.impact_paie.label(class="form-check-label") }}</div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+      </div>
+    </form>
+  </div>
+</div>

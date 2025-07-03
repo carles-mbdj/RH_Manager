@@ -3,8 +3,8 @@ from app import db
 import pandas as pd
 from io import BytesIO
 from weasyprint import HTML
-from app.models import Employee, Absence, Conge
-from app.forms import EmployeeForm, AbsenceForm, CongeForm
+from app.models import Employee, Absence
+from app.forms import EmployeeForm, AbsenceForm
 from flask_login import login_required
 from app.utils.permissions import permission_requise
 
@@ -73,34 +73,6 @@ def add_absence():
 
     return redirect(url_for('rh.list_absences'))
 
-# ---- Congés ----
-@rh_bp.route('/conges')
-@login_required
-@permission_requise('absences_conges')
-def list_conges():
-    conges = Conge.query.all()
-    form = CongeForm()
-    return render_template('conges/list.html', conges=conges, form=form)
-
-@rh_bp.route('/conges/add', methods=['POST'])
-def add_conge():
-    form = CongeForm()
-    if form.validate_on_submit():
-        conge = Conge(
-            employee_id=form.employee_id.data,
-            type_conge=form.type_conge.data,
-            date_debut=form.date_debut.data,
-            date_fin=form.date_fin.data,
-            motif=form.motif.data,
-            statut=form.statut.data
-        )
-        db.session.add(conge)
-        db.session.commit()
-        flash("Le congé a été ajouté avec succès.", "success")
-    else:
-        flash("Erreur lors de l'ajout du congé. Vérifiez le formulaire.", "danger")
-
-    return redirect(url_for('rh.list_conges'))
     
 #***************************************************************UPDATE ON DATA BASE***********************************************************
 
@@ -147,25 +119,7 @@ def edit_absence(id):
 
     return redirect(url_for('rh.list_absences'))
 
-# Modifier un congé
-@rh_bp.route('/conges/edit/<int:id>', methods=['POST'])
-def edit_conge(id):
-    conge = Conge.query.get_or_404(id)
-    form = CongeForm()
 
-    if form.validate_on_submit():
-        conge.employee_id = form.employee_id.data
-        conge.type_conge = form.type_conge.data
-        conge.date_debut = form.date_debut.data
-        conge.date_fin = form.date_fin.data
-        conge.motif = form.motif.data
-        conge.statut = form.statut.data
-
-        db.session.commit()
-        flash("Le congé a été modifié avec succès.", "success")
-        return redirect(url_for('rh.list_conges'))
-
-    return redirect(url_for('rh.list_conges'))
 
 
 #****************************************************************DELETE ON DATA BASE**********************************************************
@@ -188,14 +142,7 @@ def delete_absence(id):
     flash("L'absence a été supprimée avec succès.", "success")
     return redirect(url_for('rh.list_absences'))
 
-# Supprimer un congé
-@rh_bp.route('/conges/delete/<int:id>', methods=['POST'])
-def delete_conge(id):
-    conge = Conge.query.get_or_404(id)
-    db.session.delete(conge)
-    db.session.commit()
-    flash("Le congé a été supprimé avec succès.", "success")
-    return redirect(url_for('rh.list_conges'))
+
 
 
 #*************************************************************************VIEW****************************************************************
@@ -270,33 +217,3 @@ def export_absences_pdf():
     response.headers['Content-Disposition'] = 'inline; filename=absences.pdf'
     return response
 
-# Exportation Congés Excel et PDF 
-@rh_bp.route('/conges/export/excel')
-def export_conges_excel():
-    conges = Conge.query.all()
-    data = [{
-        #'Employé': conge.employe.nom, 
-        'Type': conge.type_conge,
-        'Date Début': conge.date_debut.strftime('%d/%m/%Y'),
-        'Date Fin': conge.date_fin.strftime('%d/%m/%Y'),
-        'Motif': conge.motif,
-        'Statut': conge.statut
-    } for conge in conges]
-
-    df = pd.DataFrame(data)
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Conges')
-
-    output.seek(0)
-    return send_file(output, download_name="conges.xlsx", as_attachment=True)
-
-@rh_bp.route('/conges/export/pdf')
-def export_conges_pdf():
-    conges = Conge.query.all()
-    rendered = render_template('conges/conges_pdf.html', conges=conges)
-    pdf = HTML(string=rendered).write_pdf()
-    response = make_response(pdf)
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = 'inline; filename=conges.pdf'
-    return response

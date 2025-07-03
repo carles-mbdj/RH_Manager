@@ -1,27 +1,28 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<h2>Paramètres</h2>
 <ul class="nav nav-tabs mb-4">
   <li class="nav-item">
     <a class="nav-link {% if active_tab == 'utilisateurs' %}active{% endif %}" href="{{ url_for('parametres.utilisateurs') }}">Utilisateurs</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link {% if active_tab == 'conges' %}active{% endif %}" href="#">Congés</a>
+    <a class="nav-link {% if active_tab == 'conges' %}active{% endif %}" href="{{ url_for('parametres.conges') }}">Congés</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link {% if active_tab == 'paie' %}active{% endif %}" href="#">Paie</a>
+    <a class="nav-link {% if active_tab == 'paie' %}active{% endif %}" href="{{ url_for('parametres.parametres_paie') }}">Paie</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link {% if active_tab == 'integrations' %}active{% endif %}" href="#">Intégrations</a>
+    <a class="nav-link {% if active_tab == 'presences' %}active{% endif %}" href="{{ url_for('parametres.parametres_presences') }}">Présences</a>
   </li>
 </ul>
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Utilisateurs du système</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAjoutUtilisateur">Ajouter un utilisateur</button>
+</div>
+
 <div class="container mt-4">
-  <h2>Utilisateurs du système</h2>
-
-  <!-- Bouton modal -->
-  <button class="btn btn-primary my-3" data-bs-toggle="modal" data-bs-target="#modalAjoutUtilisateur">Ajouter un utilisateur</button>
-
   <!-- Tableau -->
   <table class="table table-light table-hover">
     <thead>
@@ -63,14 +64,14 @@
   <hr>
 
   <!-- Bouton pour ouvrir le modal d’ajout de rôle -->
-<div class="d-flex justify-content-end mb-2">
+<div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+  <h5 class="mt-0">Rôles et permissions</h5>
   <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">
     Ajouter un rôle
   </button>
 </div>
 
 <!-- Tableau des rôles et permissions -->
-<h5 class="mt-4">Rôles et permissions</h5>
 <div class="table-responsive">
   <table class="table table-bordered text-center align-middle">
     <thead class="table-light">

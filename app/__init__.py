@@ -41,6 +41,12 @@ def create_app():
             form.nom_complet.data = current_user.nom_complet
             form.email.data = current_user.email
         return dict(form=form)
+    
+    @app.context_processor
+    def inject_forms():
+        if current_user.is_authenticated:
+            return {'profil_form': ModifierMonCompteForm(obj=current_user)}
+        return {}
 
     # Importer les modèles pour que Flask-Migrate les connaisse
     from . import models
@@ -66,6 +72,9 @@ def create_app():
 
     from app.routes.parametres import parametres_bp
     app.register_blueprint(parametres_bp)
+
+    from app.routes.conges_temps import conges_temps_bp
+    app.register_blueprint(conges_temps_bp)
 
     return app
 

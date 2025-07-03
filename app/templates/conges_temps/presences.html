@@ -1,0 +1,37 @@
+
+{% block content %}
+
+<!-- Tableau des présences -->
+<h5>Historique de présence</h5>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Employé</th>
+      <th>Date</th>
+      <th>Arrivée</th>
+      <th>Départ</th>
+      <th>Retard (min)</th>
+      <th>Statut</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for presence in presences %}
+    <tr>
+      <td>{{ presence.employe.nom }}</td>
+      <td>{{ presence.date.strftime('%d/%m/%Y') }}</td>
+      <td>{{ presence.heure_arrivee }}</td>
+      <td>{{ presence.heure_depart }}</td>
+      <td>{{ presence.retard_minutes }}</td>
+      <td>
+        {% if presence.retard_minutes > 0 %}
+          <span class="badge bg-warning text-dark">Retard</span>
+        {% else %}
+          <span class="badge bg-success">À l'heure</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

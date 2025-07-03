@@ -1,12 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
-from app.forms import FormUtilisateur, AjouterRoleForm, ModifierMonCompteForm
+from app.forms import FormUtilisateur, AjouterRoleForm, ModifierMonCompteForm, AjouterTypeCongeForm, FormParametresPaie, FormAjouterCotisation, FormParametrePresence
 from flask_login import login_required, current_user
-from app.models import Utilisateur, Role, Permission
+from app.models import Utilisateur, Role, Permission, TypeConge, ParametresPaie, CotisationSociale, ParametrePresence
 from app.utils.permissions import permission_requise
 
 
-parametres_bp = Blueprint('parametres', __name__)
+parametres_bp = Blueprint('parametres', __name__) 
 
 @parametres_bp.route('/parametres', methods=['GET', 'POST'])
 @login_required
@@ -108,3 +108,140 @@ def modifier_mon_compte():
         flash("Erreur lors de la modification du compte.", "danger")
 
     return redirect(request.referrer or url_for('dashboard.accueil'))
+
+
+@parametres_bp.route('/parametres/conges', methods=['GET', 'POST'])
+@login_required
+@permission_requise('parametres')
+def conges():
+    form = AjouterTypeCongeForm()
+    types_conge = TypeConge.query.all()
+    profil_form = ModifierMonCompteForm(obj=current_user)  
+    
+    if form.validate_on_submit():
+        nouveau_conge = TypeConge(
+            nom=form.nom.data,
+            duree_max_jours=form.duree_max_jours.data,
+            validation_requise=form.validation_requise.data
+        )
+        db.session.add(nouveau_conge)
+        db.session.commit()
+        flash('Type de congé ajouté avec succès', 'success')
+        return redirect(url_for('parametres.conges'))
+
+    return render_template('parametres/conges.html', form=form, types_conge=types_conge, active_tab='conges')
+
+@parametres_bp.route('/parametres/conges/<int:id>/modifier', methods=['POST'])
+@login_required
+@permission_requise('parametres')
+def modifier_type_conge(id):
+    conge = TypeConge.query.get_or_404(id)
+    conge.nom = request.form['nom']
+    conge.duree_max_jours = request.form['duree_max']
+    conge.validation_requise = 'validation_requise' in request.form
+    db.session.commit()
+    flash('Type de congé modifié avec succès', 'success')
+    return redirect(url_for('parametres.conges'))
+
+@parametres_bp.route('/parametres/conges/<int:id>/supprimer', methods=['POST'])
+@login_required
+def supprimer_type_conge(id):
+    conge = TypeConge.query.get_or_404(id)
+    db.session.delete(conge)
+    db.session.commit()
+    flash('Le congé a été supprimé', 'success')
+    return redirect(url_for('parametres.conges'))
+
+@parametres_bp.route('/parametres/paie', methods=['GET', 'POST'])
+@login_required
+def parametres_paie():
+    form = FormParametresPaie()
+    form_ajout = FormAjouterCotisation()
+    cotisations = CotisationSociale.query.all()
+
+    parametres = ParametresPaie.query.first()
+    if not parametres:
+        parametres = ParametresPaie(
+            smic_horaire=242, plafond_cnps=7500, taux_transport=0,
+            auto_calcule=True, jour_paiement=28,
+            heures_hebdo=40, hs_25=25, hs_50=50
+        )
+        db.session.add(parametres)
+        db.session.commit()
+
+    if form.validate_on_submit():
+        parametres.smic_horaire = form.smic_horaire.data
+        parametres.plafond_cnps = form.plafond_cnps.data
+        #parametres.taux_transport = form.taux_transport.data
+        parametres.auto_calcule = form.auto_calcule.data
+        parametres.jour_paiement = form.jour_paiement.data
+        parametres.heures_hebdo = form.heures_hebdo.data
+        parametres.hs_25 = form.hs_25.data
+        parametres.hs_50 = form.hs_50.data
+        db.session.commit()
+        flash("Paramètres de paie mis à jour", "success")
+        return redirect(url_for('parametres.parametres_paie'))
+    else:
+        # Pré-remplissage du formulaire
+        form.smic_horaire.data = parametres.smic_horaire
+        form.plafond_cnps.data = parametres.plafond_cnps
+        #form.taux_transport.data = parametres.taux_transport
+        form.auto_calcule.data = parametres.auto_calcule
+        form.jour_paiement.data = parametres.jour_paiement
+        form.heures_hebdo.data = parametres.heures_hebdo
+        form.hs_25.data = parametres.hs_25
+        form.hs_50.data = parametres.hs_50
+
+    return render_template('parametres/paie.html', form=form, cotisations=cotisations, form_ajout=form_ajout)
+
+@parametres_bp.route('/parametres/paie/cotisation/ajouter', methods=['POST'])
+@login_required
+def ajouter_cotisation():
+    form = FormAjouterCotisation()
+    if form.validate_on_submit():
+        nouvelle_cotisation = CotisationSociale(
+            libelle=form.libelle.data,
+            taux_salarial=form.taux_salarial.data,
+            taux_patronal=form.taux_patronal.data
+        )
+        db.session.add(nouvelle_cotisation)
+        db.session.commit()
+        flash("Cotisation ajoutée avec succès", "success")
+    else:
+        flash("Erreur lors de l'ajout de la cotisation", "danger")
+    return redirect(url_for('parametres.parametres_paie'))
+
+@parametres_bp.route('/parametres/paie/<int:id>/modifier', methods=['POST'])
+@login_required
+def modifier_cotisation(id):
+    cotisation = CotisationSociale.query.get_or_404(id)
+
+    try:
+        cotisation.taux_salarial = float(request.form['taux_salarial'])
+        cotisation.taux_patronal = float(request.form['taux_patronal'])
+        db.session.commit()
+        flash("Cotisation mise à jour avec succès", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("Erreur lors de la mise à jour : " + str(e), "danger")
+
+    return redirect(url_for('parametres.parametres_paie'))
+
+@parametres_bp.route('/parametres/presences', methods=['GET', 'POST'])
+@login_required
+@permission_requise('parametres')
+def parametres_presences():
+    param = ParametrePresence.query.first()
+    form = FormParametrePresence(obj=param)
+
+    if form.validate_on_submit():
+        if not param:
+            param = ParametrePresence()
+            db.session.add(param)
+
+        form.populate_obj(param)
+        db.session.commit()
+        flash("Paramètres de présence mis à jour", "success")
+        return redirect(url_for('parametres.parametres_presences'))
+
+    return render_template('parametres/presences.html', form=form, active_tab='presences')
