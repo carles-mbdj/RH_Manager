@@ -15,16 +15,6 @@ class EmployeeForm(FlaskForm):
     statut = StringField('Statut')
     submit = SubmitField('Enregistrer')
 
-class AbsenceForm(FlaskForm):
-    employee_id = StringField('ID Employé', validators=[DataRequired()])
-    type_absence = StringField('Type d\'absence')
-    date_debut = DateField('Date de début', format='%Y-%m-%d')
-    date_fin = DateField('Date de fin', format='%Y-%m-%d')
-    motif = TextAreaField('Motif')
-    justificatif = BooleanField('Justificatif fourni')
-    statut = StringField('Statut')
-    submit = SubmitField('Enregistrer')
-
 class CongeForm(FlaskForm):
     employee_id = StringField('ID Employé', validators=[DataRequired()])
     type_conge = StringField('Type de congé')
@@ -99,8 +89,15 @@ class FormParametrePresence(FlaskForm):
 
 class AbsenceForm(FlaskForm):
     employe_id = SelectField("Employé", coerce=int, validators=[DataRequired()])
-    date = DateField("Date de l’absence", format='%Y-%m-%d', validators=[DataRequired()])
+    date_absence = DateField("Date de l’absence", format='%Y-%m-%d', validators=[DataRequired()])
     motif = StringField("Motif", validators=[DataRequired()])
     justificatif = FileField("Justificatif (PDF ou image)", validators=[FileAllowed(['pdf', 'jpg', 'png', 'jpeg'], 'Fichier invalide')])
     impact_paie = BooleanField("Impacter la paie ?")
     submit = SubmitField("Enregistrer")
+
+class DemandeCongeForm(FlaskForm):
+    employe_id = SelectField("Employé", coerce=int, validators=[DataRequired()])
+    type = StringField("Type de congé", validators=[DataRequired()])
+    date_debut = DateField("Date de début", validators=[DataRequired()])
+    motif = TextAreaField("Motif", validators=[Optional()])
+    submit = SubmitField("Soumettre la demande")

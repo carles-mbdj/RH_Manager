@@ -23,11 +23,12 @@ class Absence(db.Model):
     __tablename__ = 'absence'
     id = db.Column(db.Integer, primary_key=True)
     employe_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
-    date = db.Column(db.Date, nullable=False)
+    date_absence = db.Column(db.Date, nullable=False)
     motif = db.Column(db.String(100), nullable=False)
     justificatif = db.Column(db.String(200))  # fichier PDF/image
     etat = db.Column(db.String(50), default='En attente')  # En attente, Justifiée, Non justifiée
     impact_paie = db.Column(db.Boolean, default=False)
+    date_enregistrement = db.Column(db.DateTime, default=datetime.utcnow)
 
     employe = db.relationship('Employee', backref='absences')
 
@@ -205,6 +206,8 @@ class DemandeConge(db.Model):
     statut = db.Column(db.String(20), default='En attente')
     approbateur_id = db.Column(db.Integer, db.ForeignKey('utilisateur.id'))
     date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    employe = db.relationship('Employee', backref='demandes_conge')
+    approbateur = db.relationship('Utilisateur', backref='conges_approuves')
 
 class PresenceJournal(db.Model):
     __tablename__ = 'presence_journal'

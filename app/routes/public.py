@@ -1,13 +1,11 @@
-# app/routes/public.py
-
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
-from datetime import datetime
-import os
-
+from datetime import datetime, timedelta
+import os, uuid
 from app import db, mail
-from app.models import OffreEmploi, Candidat
-from flask_mail import Message
+from app.models import OffreEmploi, Candidat, DemandeConge, Employee, Utilisateur, TypeConge
+from app.forms import DemandeCongeForm
+from flask_login import current_user
 
 public_bp = Blueprint('public', __name__)
 
@@ -76,3 +74,38 @@ def postuler(offre_id):
         return redirect(url_for('public.postuler', offre_id=offre.id))
 
     return render_template('public/candidature.html', offre=offre)
+
+@public_bp.route('/demandes_conge', methods=['GET', 'POST'])
+def demandes_conge():
+    form = DemandeCongeForm()
+    form.employe_id.choices = [(e.id, e.nom) for e in Employee.query.all()]
+    
+    if form.validate_on_submit():
+        type_conge = form.type.data
+        date_debut = form.date_debut.data
+        type_obj = TypeConge.query.filter_by(nom=type_conge).first()
+        duree = type_obj.duree_max_jours if type_obj else 1
+        date_fin = date_debut + timedelta(days=duree - 1)
+
+        demande = DemandeConge(
+            reference=f"DCG-{uuid.uuid4().hex[:8]}",
+            employe_id=form.employe_id.data,
+            type=type_conge,
+            date_debut=date_debut,
+            date_fin=date_fin,
+            duree=duree,
+            motif=form.motif.data,
+            statut="En attente",
+            approbateur_id=current_user.id
+        )
+        db.session.add(demande)
+        db.session.commit()
+        flash("Demande de congé soumise avec succès", "success")
+        return redirect(url_for('conges_temps.demandes_conge'))
+
+    demandes = DemandeConge.query.order_by(DemandeConge.date_creation.desc()).all()
+
+    type_conges = TypeConge.query.all()
+    type_conges_json = {tc.nom: tc.duree_max_jours for tc in type_conges}
+
+    return render_template("conges_temps/demandes_conge.html", form=form, demandes=demandes, type_conges=type_conges,type_conges_json=type_conges_json)

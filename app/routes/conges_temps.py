@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, current_app, request
 from flask_login import login_required
-from app.models import Conge, PresenceJournal, Employee, Absence
+from app.models import Conge, PresenceJournal, Employee, Absence, DemandeConge
 from app.forms import AbsenceForm
 from app import db
 import os
@@ -25,29 +25,67 @@ def presences():
 @conges_temps_bp.route('/conges-temps/absences', methods=['GET', 'POST'])
 @login_required
 def absences():
-    form = AbsenceForm()
-    form.employe_id.choices = [(e.id, e.nom) for e in Employee.query.all()]
-    absences = Absence.query.order_by(Absence.date.desc()).all()
-    absences = Absence.query.all()
+    form_absence = AbsenceForm()
+    form_absence.employe_id.choices = [(emp.id, emp.nom) for emp in Employee.query.all()]
+    absences = Absence.query.order_by(Absence.date_absence.desc()).all()
 
-    if form.validate_on_submit():
+    if form_absence.validate_on_submit():
+        fichier = form_absence.justificatif.data
         filename = None
-        if form.justificatif.data:
-            file = form.justificatif.data
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+        if fichier:
+            filename = secure_filename(fichier.filename)
+            fichier.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
 
         absence = Absence(
-            employe_id=form.employe_id.data,
-            date=form.date.data,
-            motif=form.motif.data,
-            justificatif=filename,
-            impact_paie=form.impact_paie.data,
-            etat="En attente"
+            employe_id=form_absence.employe_id.data,
+            date_absence=form_absence.date_absence.data,
+            motif=form_absence.motif.data,
+            justificatif=filename
         )
         db.session.add(absence)
         db.session.commit()
         flash("Absence enregistrée avec succès", "success")
         return redirect(url_for('conges_temps.absences'))
 
-    return render_template('conges_temps/index.html', form_absence=form, absences=absences, active_tab='absences')
+    return render_template('conges_temps/index.html', active_tab='absences', form=form_absence, absences=absences)
+
+@conges_temps_bp.route('/absences/<int:id>/valider', methods=['POST'])
+@login_required
+def valider_absence(id):
+    absence = Absence.query.get_or_404(id)
+    absence.statut = "Justifiée"
+    db.session.commit()
+    flash("Absence justifiée", "success")
+    return redirect(url_for('conges_temps.absences'))
+
+@conges_temps_bp.route('/absences/<int:id>/refuser', methods=['POST'])
+@login_required
+def refuser_absence(id):
+    absence = Absence.query.get_or_404(id)
+    absence.statut = "Non justifiée"
+    db.session.commit()
+    flash("Absence refusée", "danger")
+    return redirect(url_for('conges_temps.absences'))
+
+# ✅ Valider une demande
+@conges_temps_bp.route('/demandes_conge/valider/<int:id>', methods=['POST'])
+def valider_demande_conge(id):
+    demande = DemandeConge.query.get_or_404(id)
+    demande.statut = "Approuvé"
+    db.session.commit()
+    flash("Demande de congé approuvée avec succès.", "success")
+    return redirect(url_for('conges_temps.demandes_conge'))
+
+# ✅ Refuser une demande avec motif
+@conges_temps_bp.route('/demandes_conge/rejeter/<int:id>', methods=['POST'])
+def rejeter_demande_conge(id):
+    motif_refus = request.form.get('motif_refus', '')
+    if not motif_refus.strip():
+        flash("Le motif de refus est requis.", "danger")
+        return redirect(url_for('conges_temps.demandes_conge'))
+
+    demande = DemandeConge.query.get_or_404(id)
+    demande.statut = f"Rejeté - {motif_refus}"
+    db.session.commit()
+    flash("Demande de congé rejetée avec motif.", "warning")
+    return redirect(url_for('conges_temps.demandes_conge'))
